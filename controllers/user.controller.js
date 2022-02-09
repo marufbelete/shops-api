@@ -15,16 +15,17 @@ exports.saveUser = async (req, res, next) => {
       throw error;
       
     }
-    if (password.length < 5) {
-      const error = new Error("the password need to be atleast 5 charcter long.")
-      error.statusCode = 400
-      throw error;
-    }
+   
       const anyusername = await User.findOne({
       username: username,
     });
     if (anyusername) {
       const error = new Error("user-name is already in use")
+      error.statusCode = 400
+      throw error;
+    }
+    if (password.length < 5) {
+      const error = new Error("the password need to be atleast 5 charcter long.")
       error.statusCode = 400
       throw error;
     }
