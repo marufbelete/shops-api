@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const config = process.env;
+const config=require('../config.json')
 
 const authenticateJWT = (req, res, next) => {
   console.log(req.headers)
@@ -9,13 +9,11 @@ const authenticateJWT = (req, res, next) => {
   if (authHeader) {
     const token = authHeader.split(' ')[1];
     // const token = authHeader
-    jwt.verify(token, "marufsecret", (err, user) => {
+    jwt.verify(token, config.SECRET, (err, user) => {
       if (err) {
         return res.status(403).send({ msg: "something wrong" });
       }
-
       req.user = user;
-      console.log(user)
       next();
     });
   }
