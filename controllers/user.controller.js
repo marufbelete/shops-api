@@ -52,7 +52,9 @@ exports.loginUser = async (req, res, next) => {
     const username=req.body.username;
     const password = req.body.password
     if (!!!username || !!!password) {
-      return res.status(400).json("Please fill all field.")
+      const error = new Error("Please fill all field.")
+      error.statusCode = 400
+      throw error;
     }
     const user = await User.findOne({
       username: username,
