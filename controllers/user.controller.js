@@ -84,7 +84,6 @@ exports.updateUser = async (req, res, next) => {
   try {
     const name = req.body.name
     const password=req.body.password
-    const confirm_password= req.body.confirm_password
     const id=req.user.sub;
     let passwordHash
     let updateinfo={}
@@ -98,21 +97,11 @@ if(!!password)
       error.statusCode = 400
       throw error;
     }
-    if (password !== confirm_password) {
-      const error = new Error("password doesn't match. please try again.")
-      error.statusCode = 400
-      throw error;
-    }
-  
     const salt = await bcrypt.genSalt();
     passwordHash = await bcrypt.hash(password, salt);
     updateinfo.password=passwordHash
   }
-  console.log(id)
-  console.log(updateinfo)
-  updateinfo={$set:updateinfo}
-  console.log(updateinfo)
-  
+  updateinfo={$set:updateinfo}  
   const updated = await User.findByIdAndUpdate(id,updateinfo)
    res.json(updated)
   }
