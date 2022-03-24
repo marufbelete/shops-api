@@ -1,9 +1,8 @@
 const express = require('express');
 const userauth = require("../middleware/auth.middleware")
-const { createPost,getPost,closePost,renewPost,deletePost,updatePost } = require('../controllers/post.controller')
+const { createPost,getAllPost,getMyPost,deletePost,updatePost } = require('../controllers/post.controller')
 const {createCatagory,getCatgory,updateCatagory,deleteCatagory} = require('../controllers/catagory.controller')
-const {createLocation,getLocation,updateLocation,deleteLocation,getCity,getSubcity,getVillage} = require('../controllers/location.controller')
-const {addUssdCode,getUssdCode,updateUssdCode,deleteUssdCode,}=require('../controllers/payment.controller')
+const {createLocation,getCity,updateCity,deleteCity} = require('../controllers/location.controller')
 const {errorHandler} = require('../middleware/errohandling.middleware')
 const multer=require("multer");
 const router = express.Router();
@@ -26,10 +25,9 @@ const upload=multer({ storage: fileStorage, fileFilter: filefilter })
 
 //post
 router.post('/createpost', userauth,upload.array('image',6),createPost,errorHandler)
-router.get('/getpost/:firstcatagory/:secondcatagory', userauth,getPost,errorHandler)
+router.get('/getallpost', userauth,getAllPost,errorHandler)
 router.put('/updatepost/:id',upload.array('image',6), userauth,updatePost,errorHandler)
-router.put('/updatepoststatus/:id', userauth,closePost,errorHandler)
-router.put('/updatepoststatus/:id', userauth,renewPost,errorHandler)
+router.put('/getmypost', userauth,getMyPost,errorHandler)
 router.delete('/deletepost/:id', userauth,deletePost,errorHandler)
 
 //catagory
@@ -39,18 +37,10 @@ router.put('/updatecatagory/:id',upload.single('image'), userauth,updateCatagory
 router.delete('/deletecatagory/:id', userauth,deleteCatagory,errorHandler)
 
 //location
-router.post('/addlocation', userauth,createLocation,errorHandler)
-router.get('/getlocation', userauth,getLocation,errorHandler)
+router.post('/addcity', userauth,createLocation,errorHandler)
 router.get('/getcity', userauth,getCity,errorHandler)
-router.get('/getsubcity', userauth,getSubcity,errorHandler)
-router.get('/getvillage/:city', userauth,getVillage,errorHandler)
-router.put('/updatelocation/:id', userauth,updateLocation,errorHandler)
-router.delete('/deletelocation/:id', userauth,deleteLocation,errorHandler)
-//ussd code
-router.post('/createussdcode', userauth,addUssdCode,errorHandler)
-router.get('/getussdcode', userauth,getUssdCode,errorHandler)
-router.put('/updateussdcode/:id', userauth,updateUssdCode,errorHandler)
-router.delete('/deleteussdcode/:id', userauth,deleteUssdCode,errorHandler)
+router.put('/updatecity/:id', userauth,updateCity,errorHandler)
+router.delete('/deleteCity/:id', userauth,deleteCity,errorHandler)
 
 module.exports = router
 

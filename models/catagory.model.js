@@ -1,33 +1,22 @@
-const mongoose = require("mongoose");
 
-const CatagorySchema = new mongoose.Schema({
-//sale or rent
-  firstCatagoryType: {
-    type: String,
-    trim: true,
-    enum : ['sale','rent'], 
-    lowercase:true,
-    required: true,
-    unique:[true,"the catagory must be unique"]
-  },
-  secondCatagoryType: {
-    type: String,
-    trim: true,
-    required: true,
-    lowercase: true,
-    unique:[true,"the catagory must be unique"]
-  },
-  secondCatagoryImage: {
-     type: String,
-     required: true,
-    }
-},
-    {
-        timestamps: true,
-    },
-);
+const Sequalize=require('sequelize');
+const sequalize = require("../util/database");
+ const Catagory=sequalize.define('catagory',{
+   _id:{
+   type:Sequalize.INTEGER,
+   autoincrement:true,
+   allowNull:false,
+   primaryKey:true
+   },
+   catagory:{
+  type:Sequalize.STRING,
+  allowNull:false,
+  unique: true
+   },
+ })
 
 
-const CatagoryPost = mongoose.model("Catagorypost", CatagorySchema);
+module.exports = Catagory ;
 
-module.exports = CatagoryPost ;
+
+

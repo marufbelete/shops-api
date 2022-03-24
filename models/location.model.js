@@ -1,31 +1,17 @@
-const mongoose = require("mongoose");
 
-const LocationSchema = new mongoose.Schema({
- 
-  //our cata perfume bodymakeup and hairtreatment
-  city: {
-    type: String,
-    trim: true,
-    required: true,
-    lowercase: true,
-  },
-  subCity: {
-    type: String,
-    trim: true,
-    lowercase: true,
-  },
-  village: {
-    type: String,
-    trim: true,
-    lowercase: true,
-  },
-},
-  {
-    timestamps: true,
-  },
-);
-
-
-const LocationPost = mongoose.model("Location", LocationSchema);
-
-module.exports = LocationPost;
+const Sequalize=require('sequelize');
+const sequalize = require("../util/database");
+ const Location=sequalize.define('location',{
+   _id:{
+   type:Sequalize.INTEGER,
+   autoincrement:true,
+   allowNull:false,
+   primaryKey:true
+   },
+   city:{
+  type:Sequalize.STRING,
+  allowNull:false,
+  unique: true
+   }
+ })
+ module.exports = Location;

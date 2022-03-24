@@ -1,24 +1,20 @@
-const LocationPost = require("../models/location.model");
+const Location = require("../models/location.model");
 
 //for all
 exports.createLocation=async (req, res, next) => {
     try {
         console.log(req.body)
-        const isexist = await LocationPost.find({
-            city: req.body.city,
-            subCity: req.body.subcity,
-            village: req.body.village
-        })
+        const isexist = await LocationPost.findOne({ where: {  city: req.body.city }})
+
         if (isexist.length === 0) {
             // save non exsting location
-            const location = new LocationPost({
+            const location = await Location.create({
                 city: req.body.city,
                 subCity: req.body.subcity,
                 village: req.body.village
             })
 
-           const newlocation= await location.save()
-           return res.json(newlocation)
+            return res.json(location)
         }
         else {
             const error = new Error("This location already exist")
@@ -32,82 +28,42 @@ exports.createLocation=async (req, res, next) => {
   }
 }
 
-//for all
-exports.getLocation=async(req,res,next)=>{
-  try{
-      const location = await LocationPost.find()
-      res.json(location)
-    
-  }
-  catch(error){
-     next(error)
-  }
-
-}
 //get city
 exports.getCity=async(req,res,next)=>{
     try{
-        const location = await LocationPost.find().select("city").distinct("city")
+        const location = await Location.findAll()
         res.json(location)
-      
     }
     catch(error){
   next(error)
     }
   }
-  //get subcity
-exports.getSubcity=async(req,res,next)=>{
-    try{
-        const location = await LocationPost.find({city:"addis ababa"},{subCity:1,}).distinct("subCity")
-        res.json(location)
-      
-    }
-    catch(error){
-        next(error)
-          }
-  }
-//get village
-exports.getVillage=async(req,res,next)=>{
-    try{
-        let conditions = [{city:req.params.city}];
-        let subcitys = !!req.query.subcity ? req.query.subcity : !!req.query.subcity;
 
-        if (subcitys) {
-            conditions.push({subCity:subcitys });
-            console.log(subcitys)
-        }
-        console.log(req.params.city)
-        let final_condition = { $and: conditions };
-        console.log(final_condition)
-        const location = await LocationPost.find(final_condition).select("village").distinct("village")
-        res.json(location)
-      
-    }
-    catch(error){
-        next(error)
-          }
-  }
 //update location info
-exports.updateLocation=async(req,res,next)=>{
+exports.updateCity=async(req,res,next)=>{
     try{
-        const location = await LocationPost.findByIdAndUpdate(req.params.id, {
-            $set: {
-                city: req.body.city,
-                subCity: req.body.subcity,
-                village: req.body.village
-            }
-            })
-        res.json(location) 
+        const id=req.body.id;
+        const city=req.body.city
+        const newcity = await Location.update(
+            {
+                city: city,
+            },
+            { where: { _id: id } })
+       
+        res.json(newcity) 
     }
+
     catch(error){
         next(error)
           }
-         }
+    }
 
 // for admin delete
-exports.deleteLocation = async (req, res, next) => {
+exports.deleteCity = async (req, res, next) => {
     try {
-        await LocationPost.findByIdAndDelete(req.params.id)
+        const id=req.params.id;
+        await Location.destroy({ where: { _id: id } });
+
         res.json("deleted succssfully")
 
     }

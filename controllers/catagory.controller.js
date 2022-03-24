@@ -1,116 +1,72 @@
-const CatagoryPost = require("../models/catagory.model");
-const sharp=require("sharp")
-const fs=require("fs");
-// for admin
+const Catagory = require("../models/catagory.model");
+
 exports.createCatagory=async (req, res, next) => {
     try {
-        const first_catagory=req.body.firstcatagory
-        const second_catagory=req.body.secondcatagory
-        if(!!req.mimetypeError)
-        {
-            return res.json(req.mimetypeError)
-        }
-        if(!!req.file)
-        {
-            if (!fs.existsSync("../images"))
-             {
-                fs.mkdirSync("../images");
-            }
-            const imagetype = (req.file.mimetype).split("/")[1]
-            const path = req.file.originalname
-            await sharp(req.file.buffer)
-                .resize({ width: 200, fit: 'contain', })
-                .toFormat(imagetype)
-                .toFile(`./images/${path}`);
-                const newcatagory=new CatagoryPost(
-                {
-                    firstCatagoryType: first_catagory,
-                    secondCatagoryType:second_catagory,
-                    secondCatagoryImage: path
-                })
-                newcatagory.save()
+        
+        console.log(req.body)
+        const catagory=req.body.city;
+        const isexist = await LocationPost.findOne({ where: {  catagory:catagory }})
 
-              return res.json(savedorupdatecat)        
-    }
-    else{
-       const error = new Error("please add an image attachment for the catagory")
-       error.statusCode = 400
-       throw error;
-    }
-    }
-    catch(error) {
-       next(error)
-    }
-}
-//for all
-exports.getCatgory = async (req, res, next) => {
-    try {
+        if (isexist.length === 0) {
+            // save non exsting location
+            const newcatagory = await Catagory.create({
+                catagory: catagory,
+            })
 
-        const rent = await CatagoryPost.find({firstCatagoryType:"rent"},{secondCatagoryType:1,secondCatagoryImage:1, createdAt:1, updatedAt:1})
-        const sale = await CatagoryPost.find({firstCatagoryType:"sale"},{secondCatagoryType:1,secondCatagoryImage:1, createdAt:1, updatedAt:1})
-        res.json({rent,sale})
+            return res.json(newcatagory)
+        }
+        else {
+            const error = new Error("This location already exist")
+            error.statusCode = 400
+            throw error;
+        }
     }
-    catch(error) {
+
+  catch(error) {
        next(error)
-    }
+  }
 }
-// for admin update
-exports.updateCatagory = async (req, res,next)=> {
-    try {
-        if(!!req.mimetypeError)
-        {
-           return res.json(req.mimetypeError)
-        }
-        let path
-        if(!!req.file)
-        {
-            console.log(req.file.buffer)
-            if (!fs.existsSync("../images")) {
-                fs.mkdirSync("../images");
-            }
-           
-            const imagetype = (req.file.mimetype).split("/")[1]
-            path = req.file.originalname
-            if (!fs.existsSync(`./images/${path}`)) {
-                await sharp(req.file.buffer)
-                    .resize({ width: 200, fit: 'contain', })
-                    .toFormat(imagetype)
-                    .toFile(`./images/${path}`);
-            }
-            // save non exsting catagory
-            const catagory = await CatagoryPost.findByIdAndUpdate(req.params.id, {
-                $set: {
-                    firstCatagoryType: req.body.firstcatagory,
-                    secondCatagoryType: req.body.secondcatagory,
-                    secondCatagoryImage: path
-                }
-                }, {useFindAndModify: false,new:true})
-    
-               return catagoryres.json(catagory)
-        }
-        else
-        { 
-            const catagory = await CatagoryPost.findByIdAndUpdate(req.params.id, {
-                $set: {
-                    firstCatagoryType: req.body.firstcatagory,
-                    secondCatagoryType: req.body.secondcatagory,
-                }
-                }, {useFindAndModify: false,new:true})
-    
-              return res.json(catagory)
-        }
+
+//get city
+exports.getCatgory=async(req,res,next)=>{
+    try{
+        const catagory = await Catagory.findAll()
+        res.json(catagory)
     }
-    catch(error) {
-       next(error)
+    catch(error){
+  next(error)
     }
-}
+  }
+
+//update location info
+exports.updateCatagory=async(req,res,next)=>{
+    try{
+        const id=req.body.id;
+        const catagory=req.body.catagory
+        const newcat = await Catagory.update(
+            {
+                catagory: catagory,
+            },
+            { where: { _id: id } })
+       
+        res.json(newcat) 
+    }
+
+    catch(error){
+        next(error)
+          }
+    }
+
 // for admin delete
 exports.deleteCatagory = async (req, res, next) => {
     try {
-        await CatagoryPost.findByIdAndDelete(req.params.id)
+        const id=req.params.id;
+        await Catagory.destroy({ where: { _id: id } });
+
         res.json("deleted succssfully")
+
     }
     catch(error) {
-     next(error)
+        next(error)
     }
 }

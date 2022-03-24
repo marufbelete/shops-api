@@ -1,68 +1,42 @@
-const mongoose = require("mongoose");
 
-const PostSchema = new mongoose.Schema({
-    //post detail
+const Sequalize=require('sequelize');
+const sequalize = require("../util/database");
+ const Post=sequalize.define('post',{
+   _id:{
+   type:Sequalize.INTEGER,
+   autoincrement:true,
+   allowNull:false,
+   primaryKey:true
+   },
+   catagory: {
+    type:Sequalize.STRING,
+    allowNull:false,
+},
     price: {
-        type: Number,
-        trim: true,
-        required: true,
+        type:Sequalize.DOUBLE,
+        allowNull:false,
     },
     description: {
-        type: String,
-        trim: true,
+        type:Sequalize.STRING,
+        allowNull:false,
     },
     imageUrl: {
-        type: Array,
-        trim: true,
-        required: true,
-    },
-    isActive: {
-        type: Boolean,
-        default: true,
+        type:Sequalize.STRING,
+        allowNull:false,
     },
      brandName: {
-         type: String,
-         trim: true,
+        type:Sequalize.STRING,
+        allowNull:false,
     },
-  //location detail
     city: {
-        type: String,
-        trim: true,
-        required: true,
-        lowercase: true,
+        type:Sequalize.STRING,
+        allowNull:false,
     },
-    subCity: {
-        type: String,
-        trim: true,
-        lowercase: true,
-    },
-    village: {
-        type: String,
-        trim: true,
-        lowercase: true,
-    },
-//     //catagory detail
-    firstCatagoryType: {
-        type: String,
-        trim: true,
-        enum: ['sale', 'rent'],
-        lowercase: true,
-        required: true,
-    },
-    secondCatagoryType: {
-        type: String,
-        trim: true,
-        required: true,
-        lowercase: true,
-    },
- 
-},
-  {
-    timestamps: true,
-  },
-);
-
-
-const PostPost = mongoose.model("post", PostSchema);
-
-module.exports = PostPost;
+    userId:{
+        type:Sequalize.INTEGER,
+        allowNull:false,
+    }
+      
+   
+ })
+ module.exports = Post;

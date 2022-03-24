@@ -9,16 +9,14 @@ exports.saveUser = async (req, res, next) => {
     const username= req.body.username
     const password=req.body.password
 
-    if (!!!username || !!!password) {
+    if (!username || !password) {
       const error = new Error("Please fill all field.")
       error.statusCode = 400
       throw error;
-      
     }
    
-      const anyusername = await User.findOne({
-      username: username,
-    });
+      const anyusername = await User.findOne({ where: { username: username} })
+   
     if (anyusername) {
       const error = new Error("user-name is already in use")
       error.statusCode = 400
@@ -31,11 +29,11 @@ exports.saveUser = async (req, res, next) => {
     }
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
-    const user = new User({
+    const user=await User.create({
       username: username,
       password: passwordHash,
-    })
-    await user.save()
+    }) 
+    
     const token = jwt.sign({ sub: user._id, username: user.username },secret.SECRET);
     return res.json({
       token
@@ -52,13 +50,13 @@ exports.loginUser = async (req, res, next) => {
     console.log("login")
     const username=req.body.username;
     const password = req.body.password
-    if (!!!username || !!!password) {
+    if (!username || !password) {
       const error = new Error("Please fill all field.")
       error.statusCode = 400
       throw error;
     }
     const user = await User.findOne({
-      username: username,
+      where:{ username: username}
     });
     if (!user) {
       const error = new Error("No account with this user-name exist")
@@ -83,15 +81,12 @@ exports.loginUser = async (req, res, next) => {
 //update user info
 exports.updateUser = async (req, res, next) => {
   try {
-    const name = req.body.name
     const password=req.body.password
     const id=req.user.sub;
     let passwordHash
     let updateinfo={}
-if (!!name) {
-     updateinfo.name=name
-    }
-if(!!password)
+
+if(password)
 {
     if (password.length < 5) {
       const error = new Error("the password need to be atleast 5 charcter long.")
@@ -101,9 +96,10 @@ if(!!password)
     const salt = await bcrypt.genSalt();
     passwordHash = await bcrypt.hash(password, salt);
     updateinfo.password=passwordHash
-  }
-  updateinfo={$set:updateinfo}  
-  const updated = await User.findByIdAndUpdate(id,updateinfo)
+  } 
+  const updated = await User.update(
+    updateinfo,
+    { where: { _id: id } })
    res.json(updated)
   }
   catch(error) {

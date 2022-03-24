@@ -1,11 +1,12 @@
-const PostPost = require("../models/post.model");
-const LocationPost = require("../models/location.model");
-
+const Post = require("../models/post.model");
+const Sequalize=require('sequelize')
+const Location = require("../models/location.model");
 const sharp=require("sharp")
 const fs=require("fs");
 //for more than one file req.file will be chnaged in to req.files
 exports.createPost=async (req, res, next) => {
     try {
+      const userid=req.user.user_id;
         if(!!req.mimetypeError)
         {
             const error = new Error(req.mimetypeError)
@@ -31,35 +32,26 @@ console.log(req.files.length)
     imgurl.push(path)
  }
 
- const isexist = await LocationPost.find({
-    city: req.body.city,
-    subCity: req.body.subcity,
-    village: req.body.village
+ const isexist = await Location.findOne({
+    city: req.body.city
 })
 if (isexist.length === 0) {
     // save non exsting location
-    const location = new LocationPost({
+    await Location.create({
         city: req.body.city,
-        subCity: req.body.subcity,
-        village: req.body.village
     })
-  await location.save()
-
 }
- const newpost = new PostPost({
-    firstCatagoryType: req.body.firstcat,
-    secondCatagoryType: req.body.secondcat,
+ const newpost = await Post.create({
+    catagory:req.body.catagory,
     price:req.body.price,
     description:req.body.description,
     imageUrl:imgurl,
     brandName:req.body.brandname,
     city:req.body.city,
-    subCity:req.body.subcity,
-    village:req.body.village,
+    userId:userid
     
   })
-     const post=await newpost.save()
-     res.json(post)
+     res.json(newpost)
     }
   else{
     const error = new Error("you should have an attachment")
@@ -72,35 +64,45 @@ if (isexist.length === 0) {
   }
 }
 //get all post
-exports.getPost = async (req, res, next) => {
+exports.getAllPost = async (req, res, next) => {
     try {
-
-        let page = !!req.query.pageno ? req.query.pageno : 0
-        let pagesize = 10
-        let skip = pagesize * page
-
-        let conditions = [{firstCatagoryType:req.params.firstcatagory,secondCatagoryType:req.params.secondcatagory}];
-        let location = !!req.query.location ? req.query.location : "addis ababa";
+      const Op=Sequalize.Op
+        let conditions = [];
+        let catagory = !!req.query.catagory ? req.query.catagory : '';
+        let location = !!req.query.location ? req.query.location : '';
         let price = !!req.query.price ? req.query.price : !!req.query.price;
         let brandname = !!req.query.brandname ? req.query.brandname : !!req.query.brandname;
-
+      if (catagory) {
+          conditions.push({catagory:req.params.catagory});
+        }
         if (location) {
-            conditions.push({ $or: [{ village: location }, { city: location }] });
+            conditions.push({city: location });
         }
         if (price) {
-            conditions.push({ price: { $lte: price } });
+            conditions.push({ price: {[Op.lte]: price } });
         }
         if (brandname) {
             conditions.push({ brandName: brandname });
         }
         let final_condition = { $and: conditions };
-
-        const catpost = await PostPost.find(final_condition).limit(pagesize).skip(skip).sort({"updated_At":-1})
-        return res.json(catpost)
+        
+        const posts = await Post.findAll(final_condition)
+        return res.json(posts)
     }
     catch(error) {
         next(error)
       }
+}
+//get my post
+exports.getMyPost=async(req,res,next)=>{
+  try{
+    const userid=req.user.user_id
+      const posts = await Post.findAll({where:{userId:userid}})
+      res.json(posts)
+  }
+  catch(error){
+next(error)
+  }
 }
 // update post edit
 exports.updatePost = async (req, res, next) => {
@@ -130,49 +132,35 @@ exports.updatePost = async (req, res, next) => {
     imgurl.push(path)
  }
 
- const isexist = await LocationPost.find({
-    city: req.body.city,
-    subCity: req.body.subcity,
-    village: req.body.village
+const isexist = await Location.findOne({
+    city: req.body.city
 })
 if (isexist.length === 0) {
     // save non exsting location
-    const location = new LocationPost({
-        city: req.body.city,
-        subCity: req.body.subcity,
-        village: req.body.village
-})
-  await location.save()
+    await Location.create({
+        city: req.body.city
+  })
 }
-const updated=await PostPost.findByIdAndUpdate(id, 
-  {$set:{ 
-    firstCatagoryType: req.body.firstcat,
-    secondCatagoryType: req.body.secondcat,
+const updated=await Post.update({ 
+    catagory:req.body.catagory,
     price:req.body.price,
     description:req.body.description,
     imageUrl:imgurl,
     brandName:req.body.brandname,
-    city:req.body.city,
-    subCity:req.body.subcity,
-    village:req.body.village,
-  }
-},{new:true})
+    city:req.body.city
+  },{ where: { _id: id } })
    return res.json(updated)
 }
+
 else
 {
-  const updated=await PostPost.findByIdAndUpdate(id, 
-    {$set:{ 
-      firstCatagoryType: req.body.firstcat,
-      secondCatagoryType: req.body.secondcat,
-      price:req.body.price,
-      description:req.body.description,
-      brandName:req.body.brandname,
-      city:req.body.city,
-      subCity:req.body.subcity,
-      village:req.body.village,
-    }
-  })
+  const updated=await Post.update({ 
+    catagory:req.body.catagory,
+    price:req.body.price,
+    description:req.body.description,
+    brandName:req.body.brandname,
+    city:req.body.city
+  },{ where: { _id: id } })
   res.json(updated)
 }     
     }
@@ -180,31 +168,11 @@ else
         next(error)
       }
 }
-//update status
-exports.closePost = async (req, res, next) => {
-    try {
-        await PostPost.findByIdAndUpdate(req.params.id, {$set:{ isActive: false }})
-        res.json("sucessfully updated")
-    }
-    catch(error) {
-        next(error)    
-    }
-}
-//
-exports.renewPost = async (req, res, next) => {
-  try {
-      await PostPost.findByIdAndUpdate(req.params.id, {$set:{ isActive:true}})
-      res.json("sucessfully updated")
-  }
-  catch(error) {
-      next(error)    
-  }
-}
-//delete post
+
 exports.deletePost = async (req, res, next) => {
     try {
         const id = req.params.id
-        await PostPost.findByIdAndDelete(id)
+        await Post.destroy({ where: { _id: id } });
         res.json("deleted sucessfully")
     }
     catch(error) {
